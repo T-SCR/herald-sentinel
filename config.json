@@ -1,15 +1,33 @@
-{
-  "_comment": "claude-herald config — edit directly or use: herald.ps1 --help",
+﻿{
+  "_comment": "claude-herald config - edit directly or use: .\\herald.ps1 --help",
 
   "enabled": true,
 
   "voice": {
     "enabled": true,
-    "name": "Microsoft David Desktop",
-    "rate": -2,
-    "volume": 90,
-    "_note_rate": "Range: -10 (slowest) to 10 (fastest). -2 gives a deliberate, measured cadence.",
-    "_note_voices": "Run: Get-InstalledVoices.ps1 to list voices on your system."
+    "active_profile": "jarvis",
+    "_note_profiles": "Switch profiles with: .\\herald.ps1 --set-profile <name>"
+  },
+
+  "profiles": {
+    "jarvis": {
+      "name": "Microsoft David Desktop",
+      "rate": -4,
+      "volume": 95,
+      "description": "Slow, deliberate, authoritative - modelled on J.A.R.V.I.S."
+    },
+    "default": {
+      "name": "Microsoft David Desktop",
+      "rate": -2,
+      "volume": 90,
+      "description": "Measured, professional cadence"
+    },
+    "zira": {
+      "name": "Microsoft Zira Desktop",
+      "rate": -1,
+      "volume": 85,
+      "description": "Female voice, neutral pace"
+    }
   },
 
   "toast": {
@@ -24,7 +42,7 @@
     "ntfy_topic": "",
     "ntfy_token": "",
     "push_on_complete": false,
-    "_note": "Set ntfy_topic to your unique topic (e.g. 'sharat-claude-abc123'). push_on_complete: push even on task-done (not just attention-needed)."
+    "_note": "Set ntfy_topic to your unique topic. push_on_complete: push even on task-done."
   },
 
   "hooks": {
@@ -34,6 +52,6 @@
 
   "announcements": {
     "tool_details": true,
-    "_note": "tool_details: true = 'File written — Skills.md' vs just 'File written'"
+    "_note": "tool_details: true = 'File written - Skills.md' vs just 'File written'"
   }
 }

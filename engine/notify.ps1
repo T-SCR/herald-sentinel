@@ -48,7 +48,8 @@ if ($config.audio.enabled) {
 
             if ($catSounds) {
                 $soundFiles = $catSounds.Value.sounds
-                $pick       = $soundFiles[(Get-Random -Maximum $soundFiles.Count)]
+                # Always use index 0 — consistent, recognizable line per event type
+                $pick       = $soundFiles[0]
                 $fileName   = Split-Path $pick.file -Leaf
                 $filePath   = Join-Path $soundsDir $fileName
 

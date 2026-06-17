@@ -207,6 +207,7 @@ if ($Unmute) {
 if ($Toggle) {
     $cfg = Get-Config
     switch ($Toggle.ToLower()) {
+        "tone"          { $cfg.tone.mode = if ($cfg.tone.mode -eq "sir") { "friendly" } else { "sir" }; $label = "Tone mode (now: $($cfg.tone.mode))" }
         "audio"         { $cfg.audio.enabled                  = -not $cfg.audio.enabled;                  $label = "Sound pack audio" }
         "repeat"        { $cfg.alerts.repeat_enabled             = -not $cfg.alerts.repeat_enabled;             $label = "Repeat alert" }
         "play-on-tool"  { $cfg.audio.play_on_tool             = -not $cfg.audio.play_on_tool;             $label = "Audio on tool events" }
@@ -221,6 +222,7 @@ if ($Toggle) {
     }
     Save-Config $cfg
     $newVal = switch ($Toggle.ToLower()) {
+        "tone"          { $cfg.tone.mode = if ($cfg.tone.mode -eq "sir") { "friendly" } else { "sir" }; $label = "Tone mode (now: $($cfg.tone.mode))" }
         "audio"         { $cfg.audio.enabled }
         "repeat"        { $cfg.alerts.repeat_enabled             = -not $cfg.alerts.repeat_enabled;             $label = "Repeat alert" }
         "repeat"        { $cfg.alerts.repeat_enabled }

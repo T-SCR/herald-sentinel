@@ -1,153 +1,230 @@
-# claude-herald
+# herald
 
-> Voice + notification bridge for Claude Code. Stop babysitting your terminal.
+> Real audio notifications for Claude Code. Stop babysitting your terminal.
 
-When Claude finishes a task, needs your permission, or has a question — you hear it. No more tabbing back every 30 seconds to check if it's done.
+When Claude finishes a task, needs permission, or has a question — you hear it. Smart attention flow pings your phone if you don't respond. Reply from your phone and the answer auto-pastes into Claude.
 
-Built for Windows. Uses native Windows TTS (no audio files, no dependencies), Windows toast notifications, and optional mobile push via [ntfy.sh](https://ntfy.sh).
+Built for Windows. Zero external runtime dependencies (PowerShell 5 is built-in).
 
 ---
 
-## What you'll hear
+## Features
 
-| Event | Example |
-|---|---|
-| Task complete | *"Process concluded. Standing by for further instructions."* |
-| Claude has a question | *"I have a question for you when you're ready."* |
-| Needs your input | *"I require your guidance before proceeding."* |
-| Permission required | *"Authorization required. Please review and respond."* |
-| File written | *"File updated successfully — Skills.md"* |
-| Command run | *"Shell operation complete — npm install"* |
+- **Real audio** — Uses pre-recorded voice packs from the [PeonPing ecosystem](https://github.com/PeonPing/og-packs) (50+ curated packs, 337+ community packs). Default: JARVIS (Paul Bettany-inspired, ElevenLabs quality).
+- **Smart attention flow** — Fires a sound immediately on attention events (permission, question, input). If you don't respond within 45 seconds, sends a "Are you there?" push to your phone with Yes/Later buttons. All local sounds suspend until you reply — no spam.
+- **Two-way mobile replies** — Tap Approve/Deny or Yes/No action buttons in the notification. Your reply auto-pastes into the Claude terminal. Powered by [ntfy.sh](https://ntfy.sh) (free, open-source).
+- **Away/home mode** — Running errands? `herald --leaving` switches everything to phone. When you're back, `herald --home` plays "Welcome home, sir." and resumes local notifications.
+- **Slash commands** — `/leaving-home` and `/iam-at-home` work directly inside Claude Code.
+- **4 lifecycle hooks** — SessionStart, Stop, PostToolUse, UserPromptSubmit. Terminal banners for significant tools, silent for noise (Read/Grep/Glob).
+- **Full CLI** — `herald.ps1 --status`, `--test`, `--packs`, `--set-pack`, `--toggle`, and more.
 
-Voice lines are randomized from a pool so it doesn't sound robotic and repetitive.
+---
+
+## Requirements
+
+- Windows 10/11
+- PowerShell 5.1 (built-in)
+- Claude Code CLI
 
 ---
 
 ## Install
 
 ```powershell
-git clone https://github.com/sharatchandrareddy2005/claude-herald.git
-cd claude-herald
+git clone https://github.com/T-SCR/herald.git
+cd herald
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-Restart Claude Code after install.
+Restart Claude Code after install. JARVIS will greet you.
 
 ---
 
-## Quick controls
+## Sound Packs
+
+Herald uses the PeonPing `openpeon.json` format. Browse and install packs:
 
 ```powershell
-.\herald.ps1 --status              # See all current settings
-.\herald.ps1 --test                # Hear a test line right now
-.\herald.ps1 --mute                # Silence voice (keeps toasts)
-.\herald.ps1 --unmute              # Turn voice back on
-.\herald.ps1 --toggle voice        # Toggle TTS on/off
-.\herald.ps1 --toggle toast        # Toggle Windows toast popups
-.\herald.ps1 --toggle mobile       # Toggle phone push
-.\herald.ps1 --toggle tool-events  # Toggle per-tool toast popups
-.\herald.ps1 --voices              # List installed TTS voices
-.\herald.ps1 --set-voice "Microsoft Zira Desktop"
+.\install-sounds.ps1 -List                          # Browse 337+ packs
+.\install-sounds.ps1 -Packs jarvis-mk2,glados       # Install specific packs
+.\herald.ps1 --packs                                 # List installed packs
+.\herald.ps1 --set-pack jarvis-mk2                  # Switch active pack
+.\herald.ps1 --set-volume 0.7                        # Adjust volume (0.0-1.0)
+```
+
+Packs are pulled from the [PeonPing registry](https://peonping.github.io/registry/index.json) and [og-packs](https://github.com/PeonPing/og-packs).
+
+---
+
+## Mobile Push (ntfy.sh)
+
+Get notified on your phone when Claude needs attention — even when you've stepped away.
+
+1. Install the [ntfy app](https://ntfy.sh) on iOS or Android (free)
+2. Subscribe to two topics:
+   - `your-topic` — outbound push (PC → phone)
+   - `your-topic-in` — reply channel (phone → PC)
+3. Configure:
+
+```powershell
+.\herald.ps1 --set-topic your-topic
+```
+
+Action buttons on notifications (Approve/Deny, Yes/No) auto-paste your reply into the Claude terminal via `engine/reply-listener.ps1`.
+
+For private hosting, set `mobile.ntfy_server` in `config.json` to your own ntfy instance.
+
+---
+
+## Away / Home Mode
+
+```powershell
+.\herald.ps1 --leaving       # Away mode ON — all events push to phone, local silent
+.\herald.ps1 --home          # Away mode OFF — resumes local + plays welcome back
+```
+
+Or use slash commands inside Claude Code:
+
+```
+/leaving-home
+/iam-at-home
 ```
 
 ---
 
-## Mobile push (ntfy.sh)
-
-Get notified on your phone when Claude needs permission or input — even when you've stepped away.
-
-1. Install the [ntfy app](https://ntfy.sh) on your phone (iOS/Android, free)
-2. Pick a unique topic name (e.g. `sharat-claude-a7k2`)
-3. Subscribe to it in the app
-4. Run:
+## CLI Reference
 
 ```powershell
-.\herald.ps1 --set-topic sharat-claude-a7k2
+.\herald.ps1 --status                    # All current settings
+.\herald.ps1 --test                      # Fire all 4 event types + audio
+.\herald.ps1 --mute / --unmute           # Quick silence / restore
+
+# Audio
+.\herald.ps1 --packs                     # List installed packs
+.\herald.ps1 --set-pack <name>           # Switch active pack
+.\herald.ps1 --set-volume 0.7            # Volume 0.0-1.0
+.\herald.ps1 --toggle audio              # Toggle all sounds
+
+# Tone
+.\herald.ps1 --toggle tone               # Switch sir / Sharat (name) mode
+
+# Alerts
+.\herald.ps1 --toggle repeat             # Toggle are-you-there flow
+.\herald.ps1 --set-interval 45           # Seconds before are-you-there push
+
+# Notifications
+.\herald.ps1 --toggle toast              # Toggle Windows toasts
+.\herald.ps1 --toggle terminal           # Toggle terminal banners
+.\herald.ps1 --toggle mobile             # Toggle phone push
+
+# Away mode
+.\herald.ps1 --leaving                   # Go away mode
+.\herald.ps1 --home                      # Come home mode
 ```
-
-Mobile push only fires when Claude actually needs you (permission, question, input) — not on every task completion, unless you want it:
-
-```powershell
-.\herald.ps1 --toggle complete-push
-```
-
-For private ntfy self-hosting, set `mobile.ntfy_server` in `config.json`.
 
 ---
 
 ## Configuration
 
-All settings live in `config.json`. Edit directly or use `herald.ps1` toggles.
+All settings in `config.json`. Edit directly or use CLI toggles.
 
 ```json
 {
   "enabled": true,
-  "voice": {
+  "away_mode": false,
+  "audio": {
     "enabled": true,
-    "name": "Microsoft David Desktop",
-    "rate": -2,
-    "volume": 90
+    "active_pack": "jarvis-mk2",
+    "volume": 0.6,
+    "play_on_tool": false
   },
-  "toast": {
-    "enabled": true,
-    "show_tool_events": false
+  "alerts": {
+    "repeat_enabled": true,
+    "attention_wait_seconds": 45
+  },
+  "tone": {
+    "mode": "sir",
+    "name": "YourName"
   },
   "mobile": {
     "enabled": false,
     "ntfy_server": "https://ntfy.sh",
     "ntfy_topic": "",
+    "reply_topic": "",
     "push_on_complete": false
-  },
-  "hooks": {
-    "on_stop": true,
-    "on_tool_use": true
-  },
-  "announcements": {
-    "tool_details": true
   }
 }
 ```
 
-### Choosing a voice
+---
 
-Run `.\herald.ps1 --voices` to list what's installed. Some options on Windows:
-- `Microsoft David Desktop` — male, neutral (default)
-- `Microsoft Zira Desktop` — female, neutral
-- `Microsoft Mark Desktop` — male, slightly different cadence
+## How It Works
 
-To install more voices: **Settings → Time & language → Speech → Add voices**.
+Herald hooks into Claude Code's lifecycle events via `~/.claude/settings.json`:
 
-### Adjusting voice character
+| Hook | When | What |
+|------|------|------|
+| `SessionStart` | Claude Code opens | JARVIS greeting |
+| `Stop` | Claude finishes a turn | Classifies reason, plays sound, starts attention flow if needed |
+| `PostToolUse` | After Write / Edit / Bash | Terminal banner (silent on Read/Grep/Glob) |
+| `UserPromptSubmit` | You type anything | Clears attention state; plays acknowledge if returning from away |
 
-In `config.json`:
-- `rate`: `-10` (very slow) to `10` (very fast). `-2` gives a deliberate, measured delivery.
-- `volume`: `0`–`100`
+The Stop hook reads the stop reason from the hook payload to classify the event (done / question / input / permission) and routes to the correct sound category in the active pack's `openpeon.json`.
 
 ---
 
-## How it works
+## File Structure
 
-Two Claude Code hooks are registered in `~/.claude/settings.json`:
-
-| Hook | Fires when | What it does |
-|---|---|---|
-| `Stop` | Claude finishes a turn | Classifies stop reason, speaks + toasts |
-| `PostToolUse` | After every tool call | Announces significant tools (Write/Edit/Bash) silently skips noisy ones (Read/Grep) |
-
-The `Stop` hook inspects the last assistant message to classify the stop reason (task done, question, needs input, permission needed) and picks voice lines and push priority accordingly.
+```
+herald/
+├── install.ps1                  # One-command setup — registers hooks, copies config
+├── install-sounds.ps1           # Download packs from registry + og-packs fallback
+├── herald.ps1                   # CLI — all controls
+├── config.json                  # Settings (edit directly or use CLI)
+├── engine/
+│   ├── play.ps1                 # WPF MediaPlayer audio engine
+│   ├── repeat-alert.ps1         # Smart attention flow
+│   ├── reply-listener.ps1       # ntfy reply poller — auto-pastes into terminal
+│   ├── notify.ps1               # Dispatcher: audio + banner + toast
+│   ├── toast.ps1                # Windows toast notifications
+│   └── push.ps1                 # ntfy.sh push with action buttons
+├── hooks/
+│   ├── on-session-start.ps1     # SessionStart hook
+│   ├── on-stop.ps1              # Stop hook
+│   ├── on-tool-use.ps1          # PostToolUse hook
+│   └── on-submit.ps1            # UserPromptSubmit hook
+└── sounds/
+    └── jarvis-mk2/              # Default pack (JARVIS voice)
+        ├── openpeon.json        # Pack manifest
+        └── sounds/              # MP3 files
+```
 
 ---
 
 ## Uninstall
 
-Remove the two hook entries from `~/.claude/settings.json` (the ones pointing to `claude-herald`), then delete the project folder.
+Remove the four hook entries from `~/.claude/settings.json` (those pointing to the herald directory), then delete the project folder.
 
 ---
 
 ## Roadmap
 
-- [ ] Ambient "processing" indicator sound
-- [ ] Session wrap summary: *"Session complete — 3 files modified, 2 commands run"*
-- [ ] Custom voice line editing via config
-- [ ] macOS support (say command + osascript)
-- [ ] Linux support (espeak / festival)
+- [ ] Remote control from mobile — send commands to PC via ntfy relay (whitelisted)
+- [ ] Wake-on-LAN — wake a sleeping laptop from phone
+- [ ] Self-hosted ntfy — fully private push server option
+- [ ] Taskbar status indicator
+- [ ] macOS support (afplay / osascript)
+
+---
+
+## Contributing
+
+Pull requests welcome. If you build a sound pack in the `openpeon.json` format, consider submitting it to the [PeonPing registry](https://github.com/PeonPing/og-packs).
+
+For bugs and feature requests, open an issue.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

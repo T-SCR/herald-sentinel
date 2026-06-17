@@ -1,2 +1,5 @@
 herald.log
 *.log
+.reply-listener-pid
+engine/.herald-alert
+engine/.herald-away
